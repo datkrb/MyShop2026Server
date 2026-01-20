@@ -1,20 +1,7 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 
-const storage = multer.diskStorage({
-    destination: (_req, _file, cb) => {
-        const uploadPath = 'uploads/products';
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-        cb(null, uploadPath);
-    },
-    filename: (_req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Use memory storage for Cloudinary uploads (files are uploaded directly to cloud)
+const storage = multer.memoryStorage();
 
 const fileFilter = (_req: any, file: any, cb: any) => {
     if (file.mimetype.startsWith('image/')) {
@@ -24,10 +11,30 @@ const fileFilter = (_req: any, file: any, cb: any) => {
     }
 };
 
-export const upload = multer({
+// Cloudinary upload middleware (stores in memory)
+export const cloudinaryUpload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
         fileSize: 10 * 1024 * 1024 // 10MB
+    }
+});
+
+// Legacy disk storage (kept for backward compatibility if needed)
+const diskStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+        cb(null, 'uploads/products');
+    },
+    filename: (_req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + require('path').extname(file.originalname));
+    }
+});
+
+export const upload = multer({
+    storage: diskStorage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 10 * 1024 * 1024
     }
 });

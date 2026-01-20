@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import productService from "../services/product.service";
 import { sendSuccess, sendError } from "../utils/response";
+import { uploadMultipleToCloudinary } from "../utils/cloudinary";
 
 export class ProductController {
   async getAll(req: AuthRequest, res: Response) {
@@ -105,7 +106,11 @@ export class ProductController {
         return sendError(res, "NOT_FOUND", "Product not found", 404);
       }
 
-      const images = await productService.addImages(productId, files);
+      // Upload images to Cloudinary and get URLs
+      const imageUrls = await uploadMultipleToCloudinary(files);
+
+      // Save URLs to database
+      const images = await productService.addImages(productId, imageUrls);
       sendSuccess(res, images, "Images uploaded successfully", 201);
     } catch (error: any) {
       sendError(res, "INTERNAL_ERROR", error.message, 500);
