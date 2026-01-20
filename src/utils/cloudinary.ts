@@ -35,7 +35,7 @@ export async function uploadToCloudinary(file: { buffer: Buffer; mimetype: strin
             throw new Error(`Cloudinary upload failed: ${error}`);
         }
 
-        const result = await response.json();
+        const result = await response.json() as { secure_url: string };
         //console.log('Cloudinary upload success:', result.secure_url);
         return result.secure_url;
     } catch (error) {
