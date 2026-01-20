@@ -1,7 +1,5 @@
 import productRepo from '../repositories/product.repo';
 import { Messages } from '../constants/messages';
-import fs from 'fs';
-import path from 'path';
 
 export class ProductService {
   async getAll(filters: any, userRole?: string) {
@@ -95,10 +93,10 @@ export class ProductService {
     return productRepo.findTopSelling(limit);
   }
 
-  async addImages(productId: number, files: Express.Multer.File[]) {
-    const imageData = files.map(file => ({
+  async addImages(productId: number, imageUrls: string[]) {
+    const imageData = imageUrls.map(url => ({
       productId,
-      url: `/uploads/products/${file.filename}`
+      url
     }));
 
     return productRepo.addImages(imageData);
@@ -110,17 +108,7 @@ export class ProductService {
       throw new Error('Image not found');
     }
 
-    const relativePath = image.url.startsWith('/') ? image.url.substring(1) : image.url;
-    const absolutePath = path.resolve(process.cwd(), relativePath);
-
-    if (fs.existsSync(absolutePath)) {
-      try {
-        fs.unlinkSync(absolutePath);
-      } catch (err) {
-        console.error('Failed to delete image file:', err);
-      }
-    }
-
+    // Only delete from database, keep on Cloudinary as per requirements
     return productRepo.deleteImage(id);
   }
 
